@@ -3,6 +3,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import contactImg from "../assets/img/contact-img.svg";
 import 'animate.css';
 import TrackVisibility from 'react-on-screen';
+import emailjs from 'emailjs-com';
 
 export const Contact = () => {
   const formInitialDetails = {
@@ -12,35 +13,41 @@ export const Contact = () => {
     phone: '',
     message: ''
   }
+
   const [formDetails, setFormDetails] = useState(formInitialDetails);
   const [buttonText, setButtonText] = useState('Send');
   const [status, setStatus] = useState({});
 
   const onFormUpdate = (category, value) => {
-      setFormDetails({
-        ...formDetails,
-        [category]: value
-      })
+    setFormDetails({
+      ...formDetails,
+      [category]: value
+    });
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setButtonText("Sending...");
-    let response = await fetch("http://localhost:5000/contact", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-      },
-      body: JSON.stringify(formDetails),
-    });
-    setButtonText("Send");
-    let result = await response.json();
-    setFormDetails(formInitialDetails);
-    if (result.code === 200) { // Changed == to ===
-      setStatus({ success: true, message: 'Message sent successfully'});
-    } else {
-      setStatus({ success: false, message: 'Something went wrong, please try again later.'});
-    }
+
+    const templateParams = {
+      firstName: formDetails.firstName,
+      lastName: formDetails.lastName,
+      email: formDetails.email,
+      phone: formDetails.phone,
+      message: formDetails.message,
+    };
+
+    emailjs.send('service_sswmlsp', 'template_znfpb88', templateParams, 'm7F0pXKEA_EctpR78')
+      .then((response) => {
+        console.log('SUCCESS!', response.status, response.text);
+        setStatus({ success: true, message: 'Message sent successfully' });
+        setButtonText("Send");
+        setFormDetails(formInitialDetails);
+      }, (error) => {
+        console.log('FAILED...', error);
+        setStatus({ success: false, message: 'Something went wrong, please try again later.' });
+        setButtonText("Send");
+      });
   };
 
   return (
